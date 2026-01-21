@@ -1,0 +1,87 @@
+
+> **Note:**
+  The official SDK is coming soon. For now, use the REST API directly or the example code below.
+
+
+## Installation
+
+```bash
+npm install @sharpapi/client
+# or
+yarn add @sharpapi/client
+```
+
+## Quick Start
+
+```typescript
+import { SharpApiClient, createOddsStream } from '@sharpapi/client';
+
+// Initialize client
+const client = new SharpApiClient('YOUR_API_KEY');
+
+// REST API
+const odds = await client.getOdds({ sports: ['nba', 'nfl'] });
+const ev = await client.getEV({ threshold: 3.0 });
+const arbs = await client.getArbitrage({ minProfit: 1.0 });
+
+// Streaming
+const stream = createOddsStream(['nba'], {
+  onOddsUpdate: (data) => console.log('Update:', data),
+  onError: (err) => console.error('Error:', err),
+});
+
+stream.connect();
+```
+
+## Manual Implementation
+
+Until the SDK is released, use fetch directly:
+
+```typescript
+const SHARP_API_URL = 'https://sharpapi.io/api/v1';
+const API_KEY = 'YOUR_API_KEY';
+
+async function getOdds(sports?: string[]) {
+  const params = new URLSearchParams();
+  if (sports) params.set('sports', sports.join(','));
+
+  const response = await fetch(`${SHARP_API_URL}/odds?${params}`, {
+    headers: { 'X-API-Key': API_KEY },
+  });
+
+  return response.json();
+}
+
+async function getEV(threshold = 2.0) {
+  const response = await fetch(`${SHARP_API_URL}/ev?threshold=${threshold}`, {
+    headers: { 'X-API-Key': API_KEY },
+  });
+
+  return response.json();
+}
+```
+
+## SSE Streaming
+
+```typescript
+function createStream(endpoint: string, handlers: StreamHandlers) {
+  const url = new URL(`${SHARP_API_URL}/stream/${endpoint}`);
+  url.searchParams.set('api_key', API_KEY);
+
+  const eventSource = new EventSource(url.toString());
+
+  eventSource.addEventListener('initial', (e) => {
+    handlers.onInitial?.(JSON.parse(e.data));
+  });
+
+  eventSource.addEventListener('odds_update', (e) => {
+    handlers.onUpdate?.(JSON.parse(e.data));
+  });
+
+  eventSource.onerror = handlers.onError;
+
+  return {
+    close: () => eventSource.close(),
+  };
+}
+```

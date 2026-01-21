@@ -1,0 +1,111 @@
+
+## What is Expected Value?
+
+Expected Value (EV) measures the average profit or loss per bet over time.
+
+```
+EV = (Probability of Winning × Profit) - (Probability of Losing × Stake)
+```
+
+A **positive EV (+EV)** bet is profitable long-term.
+
+## Simple Example
+
+**Coin flip at +110 odds:**
+
+- Win probability: 50%
+- Win payout: $110
+- Lose amount: $100
+
+```
+EV = (0.50 × $110) - (0.50 × $100)
+EV = $55 - $50
+EV = +$5 per $100 bet (5% EV)
+```
+
+> **Tip:**
+  A 5% EV means you expect to profit $5 for every $100 wagered over time.
+
+
+## SharpAPI's EV Calculation
+
+We use **Pinnacle** (a sharp book) as the source of truth for "fair" probability.
+
+### Step 1: Get Sharp Book Odds
+
+```
+Pinnacle odds: Team A -115 / Team B +105
+```
+
+### Step 2: Remove the Vig
+
+```javascript
+// Implied probabilities (with vig)
+probA = 1 / 1.87 = 0.535  // -115
+probB = 1 / 2.05 = 0.488  // +105
+total = 1.023  // 2.3% vig
+
+// No-vig (fair) probabilities
+fairProbA = 0.535 / 1.023 = 0.523 (52.3%)
+fairProbB = 0.488 / 1.023 = 0.477 (47.7%)
+```
+
+### Step 3: Compare to Soft Book
+
+```
+DraftKings odds: Team A -105 (decimal 1.952)
+Fair probability: 52.3%
+
+EV% = (fairProb × decimalOdds - 1) × 100
+EV% = (0.523 × 1.952 - 1) × 100
+EV% = +2.1%
+```
+
+## The EV Formula
+
+```
+EV% = (fair_probability × decimal_odds - 1) × 100
+```
+
+Where:
+- `fair_probability` = No-vig probability from sharp book
+- `decimal_odds` = Soft book odds in decimal format
+
+## Why This Works
+
+| Book Type | Characteristics |
+|-----------|----------------|
+| **Sharp (Pinnacle)** | Low vig, efficient odds, accurate probabilities |
+| **Soft (DraftKings)** | Higher vig, slower to adjust, exploitable |
+
+When soft books are slow to adjust, their odds imply a lower probability than reality = **+EV opportunity**.
+
+## EV Thresholds
+
+| EV % | Quality | Action |
+|------|---------|--------|
+| < 0% | Negative EV | Never bet |
+| 0-2% | Marginal | High volume only |
+| **2-5%** | Good | Standard threshold |
+| **5%+** | Excellent | High confidence |
+
+> **Note:**
+  SharpAPI's default threshold is 2% EV. Adjust with the `threshold` parameter.
+
+
+## Variance Warning
+
++EV doesn't guarantee profit on every bet:
+
+```
+100 bets at +5% EV, $100 each:
+- Expected profit: $500
+- Actual results: Anywhere from -$2000 to +$3000
+
+With 1000 bets:
+- Results converge toward +$5000
+```
+
+> **Warning:**
+  EV is a long-term concept. Short-term variance can be brutal. Never bet more than you can afford to lose.
+

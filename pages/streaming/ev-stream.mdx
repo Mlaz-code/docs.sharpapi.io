@@ -1,0 +1,127 @@
+
+> **Note:**
+  This endpoint requires **Pro** tier or higher.
+
+
+## Query Parameters
+
+**Parameter:**
+  Filter by sports
+
+
+**Parameter:**
+  Target sportsbooks for +EV detection
+
+
+**Parameter:**
+  Minimum EV percentage to alert
+
+
+## Event Types
+
+### `initial`
+
+Current +EV opportunities on connection.
+
+```json
+{
+  "type": "initial",
+  "timestamp": "2024-01-21T02:35:00.000Z",
+  "data": {
+    "opportunities": [...],
+    "summary": {
+      "count": 5,
+      "avgEV": 3.2,
+      "maxEV": 6.5
+    }
+  }
+}
+```
+
+### `ev_opportunity`
+
+New +EV opportunity detected.
+
+```json
+{
+  "type": "ev_opportunity",
+  "timestamp": "2024-01-21T02:35:30.000Z",
+  "data": {
+    "opportunities": [
+      {
+        "eventName": "BOS Celtics @ MIA Heat",
+        "sportsbook": "draftkings",
+        "selection": "BOS Celtics -4.5",
+        "odds": -105,
+        "sharpOdds": -115,
+        "evPercent": 4.2,
+        "kellyPercent": 2.1
+      }
+    ],
+    "triggeredBy": "draftkings"
+  }
+}
+```
+
+### Example Request
+
+
+```javascript JavaScript
+const url = 'https://sharpapi.io/api/v1/stream/ev?threshold=3.0&api_key=YOUR_KEY';
+const eventSource = new EventSource(url);
+
+eventSource.addEventListener('ev_opportunity', (e) => {
+  const { data } = JSON.parse(e.data);
+
+  data.opportunities.forEach(opp => {
+    // Alert on high-value opportunities
+    if (opp.evPercent >= 5) {
+      notify(`🔥 ${opp.evPercent}% EV on ${opp.selection} @ ${opp.sportsbook}`);
+    }
+  });
+});
+```
+
+```python Python
+def stream_ev_alerts(api_key, threshold=3.0):
+    url = f'https://sharpapi.io/api/v1/stream/ev?threshold={threshold}'
+    headers = {'X-API-Key': api_key}
+
+    response = requests.get(url, headers=headers, stream=True)
+    client = sseclient.SSEClient(response)
+
+    for event in client.events():
+        if event.event == 'ev_opportunity':
+            data = json.loads(event.data)
+            for opp in data['data']['opportunities']:
+                print(f"🎯 +{opp['evPercent']}% EV: {opp['selection']} @ {opp['sportsbook']}")
+```
+
+
+
+## Use Case: Alert Bot
+
+```javascript
+// Discord/Telegram alert bot
+eventSource.addEventListener('ev_opportunity', async (e) => {
+  const { opportunities } = JSON.parse(e.data).data;
+
+  for (const opp of opportunities) {
+    if (opp.evPercent >= 5) {
+      await sendAlert({
+        title: `🔥 High EV Alert`,
+        description: `${opp.selection} @ ${opp.sportsbook}`,
+        fields: [
+          { name: 'EV', value: `+${opp.evPercent}%` },
+          { name: 'Odds', value: opp.odds },
+          { name: 'Kelly', value: `${opp.kellyPercent}%` }
+        ]
+      });
+    }
+  }
+});
+```
+
+> **Tip:**
+  Set a higher `threshold` (e.g., 5.0) to reduce noise and only get high-confidence alerts.
+

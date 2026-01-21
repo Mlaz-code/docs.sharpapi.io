@@ -1,0 +1,105 @@
+
+## Response
+
+**Response Field:**
+  Array of available sportsbook configurations
+
+
+### Example Request
+
+
+```bash cURL
+curl -X GET "https://sharpapi.io/api/v1/books" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://sharpapi.io/api/v1/books',
+  { headers: { 'X-API-Key': 'YOUR_API_KEY' } }
+);
+const { books } = await response.json();
+
+const sharpBooks = books.filter(b => b.isSharp);
+console.log('Sharp books:', sharpBooks.map(b => b.displayName));
+```
+
+
+
+### Response
+
+
+```json 200
+{
+  "success": true,
+  "timestamp": "2024-01-21T02:25:00.000Z",
+  "books": [
+    {
+      "id": "draftkings",
+      "name": "draftkings",
+      "displayName": "DraftKings",
+      "hasLiveOdds": true,
+      "hasPlayerProps": true,
+      "requiresProxy": true,
+      "region": ["US"],
+      "isSharp": false
+    },
+    {
+      "id": "pinnacle",
+      "name": "pinnacle",
+      "displayName": "Pinnacle",
+      "hasLiveOdds": true,
+      "hasPlayerProps": true,
+      "requiresProxy": false,
+      "region": ["GLOBAL"],
+      "isSharp": true
+    },
+    {
+      "id": "fanduel",
+      "name": "fanduel",
+      "displayName": "FanDuel",
+      "hasLiveOdds": true,
+      "hasPlayerProps": true,
+      "requiresProxy": true,
+      "region": ["US"],
+      "isSharp": false
+    }
+  ]
+}
+```
+
+
+
+## Book Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier (use in API filters) |
+| `displayName` | string | Human-readable name |
+| `hasLiveOdds` | boolean | Supports live/in-play odds |
+| `hasPlayerProps` | boolean | Supports player prop markets |
+| `region` | string[] | Available regions |
+| `isSharp` | boolean | Whether book is considered sharp |
+
+## Sharp vs Soft Books
+
+
+  ### Sharp Books
+
+    - Lower vig (juice)
+    - Better odds accuracy
+    - Used as reference for +EV
+    - Examples: Pinnacle, Circa
+  
+  ### Soft Books
+
+    - Higher vig
+    - More promotions
+    - Where +EV opportunities exist
+    - Examples: DraftKings, FanDuel
+  
+
+
+> **Tip:**
+  Sharp books (like Pinnacle) set efficient lines. Soft books often lag behind, creating +EV opportunities.
+

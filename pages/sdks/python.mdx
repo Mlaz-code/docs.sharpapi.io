@@ -1,0 +1,106 @@
+
+> **Note:**
+  The official SDK is coming soon. For now, use the REST API directly or the example code below.
+
+
+## Installation
+
+```bash
+pip install sharpapi
+```
+
+## Quick Start
+
+```python
+from sharpapi import SharpApiClient
+
+client = SharpApiClient('YOUR_API_KEY')
+
+# Get odds
+odds = client.get_odds(sports=['nba', 'nfl'])
+
+# Get +EV opportunities
+ev_opps = client.get_ev(threshold=3.0)
+
+# Get arbitrage
+arbs = client.get_arbitrage(min_profit=1.0)
+```
+
+## Manual Implementation
+
+Until the SDK is released, use requests:
+
+```python
+import requests
+from typing import Optional, List
+
+class SharpApiClient:
+    BASE_URL = 'https://sharpapi.io/api/v1'
+
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+        self.session = requests.Session()
+        self.session.headers['X-API-Key'] = api_key
+
+    def get_odds(self, sports: Optional[List[str]] = None) -> dict:
+        params = {}
+        if sports:
+            params['sports'] = ','.join(sports)
+
+        response = self.session.get(f'{self.BASE_URL}/odds', params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_ev(self, threshold: float = 2.0, books: Optional[List[str]] = None) -> dict:
+        params = {'threshold': threshold}
+        if books:
+            params['books'] = ','.join(books)
+
+        response = self.session.get(f'{self.BASE_URL}/ev', params=params)
+        response.raise_for_status()
+        return response.json()
+
+    def get_arbitrage(self, min_profit: float = 0.5) -> dict:
+        params = {'min_profit': min_profit}
+        response = self.session.get(f'{self.BASE_URL}/arbitrage', params=params)
+        response.raise_for_status()
+        return response.json()
+```
+
+## SSE Streaming
+
+```python
+import json
+import sseclient
+import requests
+
+def stream_odds(api_key: str, sports: Optional[List[str]] = None):
+    url = 'https://sharpapi.io/api/v1/stream/odds'
+    params = {'sports': ','.join(sports)} if sports else {}
+    headers = {'X-API-Key': api_key}
+
+    response = requests.get(url, params=params, headers=headers, stream=True)
+    client = sseclient.SSEClient(response)
+
+    for event in client.events():
+        data = json.loads(event.data)
+
+        if event.event == 'initial':
+            yield ('initial', data)
+        elif event.event == 'odds_update':
+            yield ('update', data)
+        elif event.event == 'heartbeat':
+            yield ('heartbeat', data)
+
+
+# Usage
+for event_type, data in stream_odds('YOUR_KEY', sports=['nba']):
+    print(f'{event_type}: {data}')
+```
+
+## Requirements
+
+```
+requests>=2.28.0
+sseclient-py>=1.7.2
+```

@@ -1,0 +1,96 @@
+# Authentication
+
+## API Keys
+
+All API requests require authentication via an API key. You can pass your key in two ways:
+
+### Header (Recommended)
+
+```bash
+curl -H "X-API-Key: sk_live_your_key" https://sharpapi.io/api/v1/odds
+```
+
+### Query Parameter
+
+```bash
+curl "https://sharpapi.io/api/v1/odds?api_key=sk_live_your_key"
+```
+
+> **Warning:** Never expose your API key in client-side code. Use a backend proxy for browser applications.
+
+## Test Keys
+
+For development, use these test keys:
+
+| Key | Tier | Use Case |
+|-----|------|----------|
+| `sk_test_free` | Free | Basic testing |
+| `sk_test_pro` | Pro | Full feature access |
+| `sk_test_sharp` | Sharp | Unlimited testing |
+
+> **Note:** Test keys return real data but don't count against your quota.
+
+## Subscription Tiers
+
+### Free - $0/month
+- 100 requests/minute
+- 1 concurrent stream
+- Odds endpoint only
+- 5 second data delay
+
+### Pro - $49/month
+- 1,000 requests/minute
+- 3 concurrent streams
+- +EV & Arbitrage access
+- Real-time data
+
+### Sharp - $199/month
+- Unlimited requests
+- 10 concurrent streams
+- All features + webhooks
+- Priority support
+
+## Rate Limits
+
+Rate limits are enforced per API key. Current limits are returned in response headers:
+
+```
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 999
+X-RateLimit-Reset: 1705804800
+```
+
+### Rate Limit Response
+
+When exceeded, you'll receive a `429` response:
+
+```json
+{
+  "error": "Rate limit exceeded",
+  "code": "rate_limit_exceeded",
+  "retry_after": 45,
+  "upgrade_url": "https://sharpapi.io/pricing"
+}
+```
+
+> **Tip:** Use the `retry_after` value to implement exponential backoff.
+
+## Feature Access by Tier
+
+| Feature | Free | Pro | Sharp |
+|---------|------|-----|-------|
+| `GET /odds` | Yes | Yes | Yes |
+| `GET /books` | Yes | Yes | Yes |
+| `GET /ev` | No | Yes | Yes |
+| `GET /arbitrage` | No | Yes | Yes |
+| `GET /stream/*` | 1 stream | 3 streams | 10 streams |
+| Webhooks | No | No | Yes |
+
+## Error Codes
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| `invalid_api_key` | 401 | API key missing or invalid |
+| `expired_api_key` | 401 | API key has expired |
+| `feature_not_available` | 403 | Feature requires higher tier |
+| `rate_limit_exceeded` | 429 | Too many requests |

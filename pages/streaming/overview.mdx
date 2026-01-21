@@ -1,0 +1,137 @@
+# Streaming Overview
+
+## Why Streaming?
+
+REST polling has a 30-60 second delay. SSE streaming delivers updates in **sub-second** latency.
+
+| Approach | Latency | Use Case |
+|----------|---------|----------|
+| REST polling | 30-60s | Casual browsing |
+| **SSE streaming** | < 1s | Live betting, alerts |
+
+## How SSE Works
+
+Server-Sent Events (SSE) is a standard for server-to-client streaming over HTTP:
+
+```
+Client                    Server
+  |                         |
+  |--- GET /stream/odds --->|
+  |                         |
+  |<-- event: initial ------|
+  |<-- event: odds_update --|
+  |<-- event: odds_update --|
+  |<-- event: heartbeat ----|
+  |         ...             |
+```
+
+> **Tip:** SSE automatically reconnects on disconnect. Use `Last-Event-ID` header for seamless recovery.
+
+## Available Streams
+
+| Endpoint | Description | Tier |
+|----------|-------------|------|
+| `/stream/odds` | All odds updates | All |
+| `/stream/ev` | +EV opportunities | Pro+ |
+| `/stream/arbitrage` | Arbitrage alerts | Pro+ |
+
+## Quick Start
+
+### Browser
+
+```javascript
+const eventSource = new EventSource(
+  'https://sharpapi.io/api/v1/stream/odds?api_key=YOUR_KEY'
+);
+
+// Initial snapshot
+eventSource.addEventListener('initial', (e) => {
+  const data = JSON.parse(e.data);
+  console.log('Initial odds:', data.data);
+});
+
+// Live updates
+eventSource.addEventListener('odds_update', (e) => {
+  const update = JSON.parse(e.data);
+  console.log('Update from:', update.source);
+});
+
+// Heartbeat (every 30s)
+eventSource.addEventListener('heartbeat', () => {
+  console.log('Connection alive');
+});
+
+// Handle errors
+eventSource.onerror = (e) => {
+  console.log('Connection lost, auto-reconnecting...');
+};
+```
+
+### Node.js
+
+```typescript
+import EventSource from 'eventsource';
+
+const es = new EventSource(
+  'https://sharpapi.io/api/v1/stream/odds',
+  { headers: { 'X-API-Key': 'YOUR_KEY' } }
+);
+
+es.addEventListener('initial', (e) => {
+  const data = JSON.parse(e.data);
+  console.log(`Received ${Object.keys(data.data).length} books`);
+});
+
+es.addEventListener('odds_update', (e) => {
+  const update = JSON.parse(e.data);
+  console.log(`${update.source}: ${update.data[update.source].length} odds`);
+});
+```
+
+### Python
+
+```python
+import sseclient
+import requests
+import json
+
+url = 'https://sharpapi.io/api/v1/stream/odds'
+headers = {'X-API-Key': 'YOUR_KEY'}
+
+response = requests.get(url, headers=headers, stream=True)
+client = sseclient.SSEClient(response)
+
+for event in client.events():
+    if event.event == 'initial':
+        print('Got initial snapshot')
+    elif event.event == 'odds_update':
+        data = json.loads(event.data)
+        print(f'Update from {data["source"]}')
+```
+
+## Event Types
+
+| Event | Description | Payload |
+|-------|-------------|---------|
+| `initial` | Full snapshot on connect | All current odds |
+| `odds_update` | Odds changed | Updated odds for one book |
+| `ev_opportunity` | New +EV found | EV opportunity details |
+| `arbitrage` | New arb found | Arbitrage with stakes |
+| `heartbeat` | Keep-alive | Timestamp only |
+
+## Concurrent Stream Limits
+
+| Tier | Max Streams |
+|------|-------------|
+| Free | 1 |
+| Pro | 3 |
+| Sharp | 10 |
+
+> **Warning:** Exceeding your stream limit returns a `429` error. Close unused streams to open new ones.
+
+## Best Practices
+
+- **Handle reconnection gracefully** - EventSource auto-reconnects, but reset local state on `initial` events
+- **Process updates asynchronously** - Don't block the event handler. Queue updates for background processing
+- **Use filters to reduce bandwidth** - Pass `sports` and `books` params to receive only relevant updates
+- **Monitor heartbeats** - If you don't receive a heartbeat in 60s, the connection may be stale

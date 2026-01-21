@@ -1,0 +1,128 @@
+
+## Query Parameters
+
+**Parameter:**
+  Filter by sports (e.g., `nba,nfl`)
+
+
+**Parameter:**
+  Filter by sportsbooks (e.g., `draftkings,pinnacle`)
+
+
+## Event Types
+
+### `initial`
+
+Sent immediately on connection with full odds snapshot.
+
+```json
+{
+  "type": "initial",
+  "timestamp": "2024-01-21T02:30:00.000Z",
+  "data": {
+    "draftkings": [...],
+    "pinnacle": [...]
+  }
+}
+```
+
+### `odds_update`
+
+Sent when odds change for a sportsbook.
+
+```json
+{
+  "type": "odds_update",
+  "timestamp": "2024-01-21T02:30:15.000Z",
+  "source": "draftkings",
+  "data": {
+    "draftkings": [
+      {
+        "id": "draftkings_33483153_spread_PHO",
+        "odds": { "american": -108, "decimal": 1.926 },
+        "...": "..."
+      }
+    ]
+  }
+}
+```
+
+### `heartbeat`
+
+Sent every 30 seconds to keep connection alive.
+
+```json
+{
+  "type": "heartbeat",
+  "timestamp": "2024-01-21T02:31:00.000Z"
+}
+```
+
+### Example Request
+
+
+```javascript JavaScript
+const url = new URL('https://sharpapi.io/api/v1/stream/odds');
+url.searchParams.set('api_key', 'YOUR_KEY');
+url.searchParams.set('sports', 'nba,nfl');
+
+const eventSource = new EventSource(url);
+
+eventSource.addEventListener('initial', (e) => {
+  const { data } = JSON.parse(e.data);
+
+  // Initialize your odds state
+  Object.entries(data).forEach(([book, odds]) => {
+    console.log(`${book}: ${odds.length} odds`);
+  });
+});
+
+eventSource.addEventListener('odds_update', (e) => {
+  const { source, data, timestamp } = JSON.parse(e.data);
+
+  // Update your odds state
+  console.log(`[${timestamp}] ${source} updated ${data[source].length} odds`);
+});
+```
+
+```python Python
+import json
+import sseclient
+import requests
+
+def stream_odds(api_key, sports=None):
+    url = 'https://sharpapi.io/api/v1/stream/odds'
+    params = {'sports': sports} if sports else {}
+    headers = {'X-API-Key': api_key}
+
+    response = requests.get(url, params=params, headers=headers, stream=True)
+    client = sseclient.SSEClient(response)
+
+    for event in client.events():
+        data = json.loads(event.data)
+
+        if event.event == 'initial':
+            for book, odds in data['data'].items():
+                print(f'{book}: {len(odds)} odds')
+
+        elif event.event == 'odds_update':
+            book = data['source']
+            print(f'Update from {book}')
+
+stream_odds('YOUR_KEY', sports='nba,nfl')
+```
+
+
+
+## Filtering
+
+Use query parameters to reduce bandwidth:
+
+```javascript
+// Only NBA odds from DraftKings
+const url = 'https://sharpapi.io/api/v1/stream/odds?sports=nba&books=draftkings&api_key=KEY';
+```
+
+> **Tip:**
+  Filtering happens server-side, so you only receive relevant updates.
+

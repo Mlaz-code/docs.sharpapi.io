@@ -1,0 +1,55 @@
+
+## Base URL
+
+```
+https://sharpapi.io/api/v1
+```
+
+## Request Format
+
+- All requests use HTTPS
+- Authentication via `X-API-Key` header or `api_key` query param
+- Request bodies (where applicable) use JSON
+
+## Response Format
+
+```json
+{
+  "success": true,
+  "timestamp": "2024-01-21T12:00:00.000Z",
+  "data": { ... }
+}
+```
+
+## Common Query Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sports` | string | Comma-separated: `nba,nfl,nhl` |
+| `books` | string | Comma-separated: `draftkings,pinnacle` |
+
+## Endpoints
+
+| Method | Endpoint | Description | Tier |
+|--------|----------|-------------|------|
+| GET | `/odds` | Current odds snapshot | All |
+| GET | `/ev` | +EV opportunities | Pro+ |
+| GET | `/arbitrage` | Arbitrage opportunities | Pro+ |
+| GET | `/books` | Available sportsbooks | All |
+| GET | `/stream/odds` | Real-time odds (SSE) | All |
+| GET | `/stream/ev` | Live +EV alerts (SSE) | Pro+ |
+| GET | `/stream/arbitrage` | Live arb alerts (SSE) | Pro+ |
+
+## Odds Formats
+
+All odds include three formats:
+
+```json
+{
+  "odds": {
+    "american": -110,
+    "decimal": 1.909,
+    "probability": 0.5238
+  }
+}
+```

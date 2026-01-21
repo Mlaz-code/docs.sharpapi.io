@@ -1,0 +1,10 @@
+{
+  "index": "Introduction",
+  "quickstart": "Quick Start",
+  "authentication": "Authentication",
+  "api-reference": "API Reference",
+  "streaming": "Streaming",
+  "concepts": "Core Concepts",
+  "sdks": "SDKs",
+  "examples": "Examples"
+}

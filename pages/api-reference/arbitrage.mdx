@@ -1,0 +1,155 @@
+
+> **Note:**
+  This endpoint requires **Pro** tier or higher.
+
+
+## How Arbitrage Works
+
+Arbitrage occurs when the combined implied probability across books is less than 100%:
+
+1. Find best odds for each outcome across all books
+2. Calculate combined implied probability
+3. **If total < 100%, arbitrage exists**
+4. Profit % = (100 / total) - 100
+
+> **Tip:**
+  A 2% arbitrage means guaranteed $2 profit per $100 wagered, regardless of outcome.
+
+
+## Query Parameters
+
+**Parameter:**
+  Comma-separated sports filter
+
+
+**Parameter:**
+  Minimum profit percentage to return
+
+
+## Response
+
+**Response Field:**
+  Summary statistics for arbitrage opportunities
+
+
+**Response Field:**
+  Array of arbitrage opportunities with stake calculations
+
+
+### Example Request
+
+
+```bash cURL
+curl -X GET "https://sharpapi.io/api/v1/arbitrage?min_profit=1.0" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://sharpapi.io/api/v1/arbitrage?min_profit=1.0',
+  { headers: { 'X-API-Key': 'YOUR_API_KEY' } }
+);
+const { opportunities } = await response.json();
+
+opportunities.forEach(arb => {
+  console.log(`${arb.eventName}: ${arb.profitPercent}% guaranteed profit`);
+  arb.legs.forEach(leg => {
+    console.log(`  ${leg.sportsbook}: ${leg.selection} @ ${leg.odds} (${leg.stakePercent}%)`);
+  });
+});
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://sharpapi.io/api/v1/arbitrage',
+    params={'min_profit': 1.0},
+    headers={'X-API-Key': 'YOUR_API_KEY'}
+)
+
+for arb in response.json()['opportunities']:
+    print(f"{arb['eventName']}: {arb['profitPercent']}% profit")
+    for leg in arb['legs']:
+        print(f"  {leg['sportsbook']}: {leg['selection']} - stake {leg['stakePercent']}%")
+```
+
+
+
+### Response
+
+
+```json 200
+{
+  "success": true,
+  "timestamp": "2024-01-21T02:20:00.000Z",
+  "summary": {
+    "count": 5,
+    "avgProfit": 1.8,
+    "maxProfit": 3.2,
+    "byMarket": { "moneyline": 3, "spread": 2 },
+    "bySport": { "nba": 3, "nhl": 2 }
+  },
+  "opportunities": [
+    {
+      "eventId": "33483200",
+      "eventName": "BOS Celtics @ MIA Heat",
+      "sport": "nba",
+      "marketType": "moneyline",
+      "profitPercent": 2.15,
+      "impliedTotal": 0.9789,
+      "legs": [
+        {
+          "sportsbook": "draftkings",
+          "selection": "BOS Celtics",
+          "odds": -145,
+          "decimalOdds": 1.69,
+          "stakePercent": 59.17
+        },
+        {
+          "sportsbook": "pinnacle",
+          "selection": "MIA Heat",
+          "odds": 155,
+          "decimalOdds": 2.55,
+          "stakePercent": 40.83
+        }
+      ],
+      "detectedAt": "2024-01-21T02:19:55.000Z"
+    }
+  ]
+}
+```
+
+
+
+## Calculating Stakes
+
+The `stakePercent` values tell you how to split your bankroll:
+
+**Example with $1000 total stake:**
+
+| Leg | Stake % | Amount | Odds | Potential Return |
+|-----|---------|--------|------|------------------|
+| BOS @ DraftKings | 59.17% | $591.70 | -145 | $1,000 |
+| MIA @ Pinnacle | 40.83% | $408.30 | +155 | $1,041.18 |
+
+**Guaranteed profit: ~$21.50 (2.15%)**
+
+> **Warning:**
+  Sportsbooks may limit or ban accounts that consistently place arbitrage bets. Use at your own risk.
+
+
+## Arbitrage Schema
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `eventId` | string | Event identifier |
+| `eventName` | string | Readable event name |
+| `marketType` | string | Market type |
+| `profitPercent` | number | Guaranteed profit (%) |
+| `impliedTotal` | number | Combined implied probability |
+| `legs` | array | Individual bets to place |
+| `legs[].sportsbook` | string | Sportsbook for this leg |
+| `legs[].selection` | string | Selection to bet |
+| `legs[].odds` | number | American odds |
+| `legs[].stakePercent` | number | % of total stake |
