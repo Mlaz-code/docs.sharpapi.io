@@ -1,8 +1,13 @@
 import React from 'react';
+import Link from 'next/link';
 import { DocsThemeConfig } from 'nextra-theme-docs';
 
 const config: DocsThemeConfig = {
-  logo: <span style={{ fontWeight: 700 }}>SharpAPI</span>,
+  logo: (
+    <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+      <span style={{ fontWeight: 700 }}>SharpAPI</span>
+    </Link>
+  ),
   useNextSeoProps() {
     return {
       titleTemplate: '%s - SharpAPI Docs',
