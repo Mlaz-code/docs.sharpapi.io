@@ -33,7 +33,13 @@ const config: DocsThemeConfig = {
     toggleButton: true,
   },
   toc: {
-    backToTop: true,
+    backToTop: false,
+  },
+  feedback: {
+    content: null,
+  },
+  editLink: {
+    component: null,
   },
 };
 
