@@ -1,7 +1,12 @@
+# Expected Value (EV)
 
-> **Note:**
-  This endpoint requires **Pro** tier or higher.
+Get current +EV betting opportunities based on sharp book reference.
 
+```
+GET /api/v1/ev
+```
+
+> **Note:** This endpoint requires **Pro** tier or higher.
 
 ## How +EV is Calculated
 
@@ -18,26 +23,21 @@ SharpAPI uses Pinnacle (a sharp book) as the reference for true probability:
 
 ## Query Parameters
 
-**Parameter:**
-  Comma-separated sports filter
-
-
-**Parameter:**
-  Target sportsbooks to find +EV on (e.g., `draftkings,fanduel`)
-
-
-**Parameter:**
-  Minimum EV percentage to return
-
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sports` | string | all | Comma-separated sports filter |
+| `books` | string | all | Target sportsbooks to find +EV on (e.g., `draftkings,fanduel`) |
+| `threshold` | number | `2.0` | Minimum EV percentage to return |
+| `api_key` | string | - | API key (alternative to `X-API-Key` header) |
 
 ## Response
 
-**Response Field:**
-  Summary statistics for opportunities found
-
-
-**Response Field:**
-  Array of +EV betting opportunities
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Whether the request succeeded |
+| `timestamp` | string | ISO 8601 timestamp |
+| `summary` | object | Summary statistics for opportunities found |
+| `opportunities` | array | Array of +EV betting opportunities |
 
 
 ### Example Request

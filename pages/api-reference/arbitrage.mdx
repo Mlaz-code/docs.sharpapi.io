@@ -1,7 +1,12 @@
+# Arbitrage
 
-> **Note:**
-  This endpoint requires **Pro** tier or higher.
+Get current arbitrage opportunities across sportsbooks.
 
+```
+GET /api/v1/arbitrage
+```
+
+> **Note:** This endpoint requires **Pro** tier or higher.
 
 ## How Arbitrage Works
 
@@ -18,22 +23,20 @@ Arbitrage occurs when the combined implied probability across books is less than
 
 ## Query Parameters
 
-**Parameter:**
-  Comma-separated sports filter
-
-
-**Parameter:**
-  Minimum profit percentage to return
-
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sports` | string | all | Comma-separated sports filter |
+| `min_profit` | number | `0.5` | Minimum profit percentage to return |
+| `api_key` | string | - | API key (alternative to `X-API-Key` header) |
 
 ## Response
 
-**Response Field:**
-  Summary statistics for arbitrage opportunities
-
-
-**Response Field:**
-  Array of arbitrage opportunities with stake calculations
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Whether the request succeeded |
+| `timestamp` | string | ISO 8601 timestamp |
+| `summary` | object | Summary statistics for arbitrage opportunities |
+| `opportunities` | array | Array of arbitrage opportunities with stake calculations |
 
 
 ### Example Request

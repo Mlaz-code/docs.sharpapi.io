@@ -1,9 +1,20 @@
+# Sportsbooks
+
+Get list of available sportsbooks and their current status.
+
+```
+GET /api/v1/books
+```
 
 ## Response
 
-**Response Field:**
-  Array of available sportsbook configurations
-
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Whether the request succeeded |
+| `timestamp` | string | ISO 8601 timestamp |
+| `count` | number | Total number of sportsbooks |
+| `active` | number | Number of sportsbooks currently providing data |
+| `books` | array | Array of sportsbook configurations |
 
 ### Example Request
 
@@ -33,6 +44,8 @@ console.log('Sharp books:', sharpBooks.map(b => b.displayName));
 {
   "success": true,
   "timestamp": "2024-01-21T02:25:00.000Z",
+  "count": 6,
+  "active": 3,
   "books": [
     {
       "id": "draftkings",
@@ -40,9 +53,11 @@ console.log('Sharp books:', sharpBooks.map(b => b.displayName));
       "displayName": "DraftKings",
       "hasLiveOdds": true,
       "hasPlayerProps": true,
-      "requiresProxy": true,
       "region": ["US"],
-      "isSharp": false
+      "isSharp": false,
+      "status": "active",
+      "oddsCount": 1250,
+      "lastUpdate": "2024-01-21T02:24:58.000Z"
     },
     {
       "id": "pinnacle",
@@ -50,9 +65,11 @@ console.log('Sharp books:', sharpBooks.map(b => b.displayName));
       "displayName": "Pinnacle",
       "hasLiveOdds": true,
       "hasPlayerProps": true,
-      "requiresProxy": false,
       "region": ["GLOBAL"],
-      "isSharp": true
+      "isSharp": true,
+      "status": "active",
+      "oddsCount": 980,
+      "lastUpdate": "2024-01-21T02:24:55.000Z"
     },
     {
       "id": "fanduel",
@@ -60,9 +77,11 @@ console.log('Sharp books:', sharpBooks.map(b => b.displayName));
       "displayName": "FanDuel",
       "hasLiveOdds": true,
       "hasPlayerProps": true,
-      "requiresProxy": true,
       "region": ["US"],
-      "isSharp": false
+      "isSharp": false,
+      "status": "inactive",
+      "oddsCount": 0,
+      "lastUpdate": null
     }
   ]
 }
@@ -80,6 +99,9 @@ console.log('Sharp books:', sharpBooks.map(b => b.displayName));
 | `hasPlayerProps` | boolean | Supports player prop markets |
 | `region` | string[] | Available regions |
 | `isSharp` | boolean | Whether book is considered sharp |
+| `status` | string | `active` or `inactive` - whether currently providing data |
+| `oddsCount` | number | Number of odds currently available |
+| `lastUpdate` | string? | ISO 8601 timestamp of last data update (null if inactive) |
 
 ## Sharp vs Soft Books
 

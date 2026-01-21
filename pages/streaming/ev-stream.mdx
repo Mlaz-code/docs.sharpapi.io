@@ -1,21 +1,21 @@
+# EV Stream
 
-> **Note:**
-  This endpoint requires **Pro** tier or higher.
+Real-time +EV opportunity alerts via Server-Sent Events (SSE).
 
+```
+GET /api/v1/stream/ev
+```
+
+> **Note:** This endpoint requires **Pro** tier or higher.
 
 ## Query Parameters
 
-**Parameter:**
-  Filter by sports
-
-
-**Parameter:**
-  Target sportsbooks for +EV detection
-
-
-**Parameter:**
-  Minimum EV percentage to alert
-
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sports` | string | all | Filter by sports |
+| `books` | string | all | Target sportsbooks for +EV detection |
+| `threshold` | number | `2.0` | Minimum EV percentage to alert |
+| `api_key` | string | - | API key (alternative to `X-API-Key` header) |
 
 ## Event Types
 

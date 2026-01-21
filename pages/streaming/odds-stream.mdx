@@ -1,12 +1,26 @@
+# Odds Stream
+
+Real-time odds updates via Server-Sent Events (SSE).
+
+```
+GET /api/v1/stream/odds
+```
 
 ## Query Parameters
 
-**Parameter:**
-  Filter by sports (e.g., `nba,nfl`)
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sports` | string | Filter by sports (e.g., `nba,nfl`) |
+| `books` | string | Filter by sportsbooks (e.g., `draftkings,pinnacle`) |
+| `api_key` | string | API key (alternative to `X-API-Key` header) |
 
+## Connection Limits
 
-**Parameter:**
-  Filter by sportsbooks (e.g., `draftkings,pinnacle`)
+| Tier | Concurrent Streams |
+|------|-------------------|
+| Free | 1 |
+| Pro | 3 |
+| Sharp | 10 |
 
 
 ## Event Types

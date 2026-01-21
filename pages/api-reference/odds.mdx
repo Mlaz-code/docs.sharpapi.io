@@ -1,34 +1,39 @@
+# Odds
+
+Get a snapshot of current odds from all sportsbooks.
+
+```
+GET /api/v1/odds
+```
 
 ## Query Parameters
 
-**Parameter:**
-  Comma-separated sports filter. Example: `nba,nfl,nhl`
-
-
-**Parameter:**
-  Comma-separated sportsbooks filter. Example: `draftkings,pinnacle`
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sports` | string | Comma-separated sports filter. Example: `nba,nfl,nhl` |
+| `books` | string | Comma-separated sportsbooks filter. Example: `draftkings,pinnacle` |
+| `api_key` | string | API key (alternative to `X-API-Key` header) |
 
 
 ## Response
 
-**Response Field:**
-  Whether the request succeeded
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Whether the request succeeded |
+| `timestamp` | string | ISO 8601 timestamp of the response |
+| `count` | number | Total number of odds returned |
+| `books` | string[] | List of sportsbooks with data |
+| `data` | object | Odds grouped by sportsbook |
 
+## Rate Limit Headers
 
-**Response Field:**
-  ISO 8601 timestamp of the response
+All responses include rate limit information:
 
-
-**Response Field:**
-  Total number of odds returned
-
-
-**Response Field:**
-  List of sportsbooks with data
-
-
-**Response Field:**
-  Odds grouped by sportsbook
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Maximum requests per minute |
+| `X-RateLimit-Remaining` | Requests remaining in current window |
+| `X-RateLimit-Reset` | Unix timestamp when limit resets |
 
 
 ### Example Request
@@ -104,6 +109,22 @@ data = response.json()
 {
   "error": "Invalid API key",
   "code": "invalid_api_key"
+}
+```
+
+```json 429
+{
+  "error": "Rate limit exceeded",
+  "code": "rate_limit_exceeded",
+  "retry_after": 45,
+  "upgrade_url": "https://sharpapi.io/pricing"
+}
+```
+
+```json 500
+{
+  "error": "Failed to fetch odds",
+  "code": "internal_error"
 }
 ```
 

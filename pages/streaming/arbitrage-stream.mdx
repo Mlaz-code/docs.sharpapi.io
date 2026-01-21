@@ -1,17 +1,20 @@
+# Arbitrage Stream
 
-> **Note:**
-  This endpoint requires **Pro** tier or higher.
+Real-time arbitrage opportunity alerts via Server-Sent Events (SSE).
 
+```
+GET /api/v1/stream/arbitrage
+```
+
+> **Note:** This endpoint requires **Pro** tier or higher.
 
 ## Query Parameters
 
-**Parameter:**
-  Filter by sports
-
-
-**Parameter:**
-  Minimum profit percentage to alert
-
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `sports` | string | all | Filter by sports |
+| `min_profit` | number | `0.5` | Minimum profit percentage to alert |
+| `api_key` | string | - | API key (alternative to `X-API-Key` header) |
 
 ## Event Types
 
