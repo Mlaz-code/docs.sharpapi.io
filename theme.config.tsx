@@ -8,6 +8,32 @@ const config: DocsThemeConfig = {
       <span style={{ fontWeight: 700 }}>SharpAPI</span>
     </Link>
   ),
+  project: {
+    link: 'https://github.com/Mlaz-code/sharp-api',
+  },
+  navbar: {
+    extraContent: (
+      <>
+        <a
+          href="https://sharpapi.io"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            padding: '0.5rem 1rem',
+            marginLeft: '0.5rem',
+            backgroundColor: '#3b82f6',
+            color: 'white',
+            borderRadius: '0.375rem',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            textDecoration: 'none',
+          }}
+        >
+          Back to SharpAPI →
+        </a>
+      </>
+    ),
+  },
   useNextSeoProps() {
     return {
       titleTemplate: '%s - SharpAPI Docs',
@@ -24,7 +50,7 @@ const config: DocsThemeConfig = {
   footer: {
     text: (
       <span>
-        {new Date().getFullYear()} SharpAPI. All rights reserved.
+        {new Date().getFullYear()} SharpAPI. Built with ♠️ for sharp bettors.
       </span>
     ),
   },
