@@ -1,0 +1,149 @@
+# Best Odds
+
+Get the best available odds for each selection across all sportsbooks.
+
+```
+GET /api/v1/odds/best
+```
+
+## Authentication
+
+Requires API key. **Pro tier or above required.**
+
+## Query Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `sports` | string | No | all | Comma-separated sports |
+| `market_type` | string | No | all | Filter by market type |
+| `limit` | integer | No | 100 | Max results (max 500) |
+
+## Response
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Request status |
+| `timestamp` | string | ISO 8601 timestamp |
+| `count` | number | Results returned |
+| `filters` | object | Applied filters |
+| `bestOdds` | array | Best odds per selection |
+
+### Best Odds Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `eventId` | string | Event identifier |
+| `eventName` | string | Event display name |
+| `sport` | string | Sport |
+| `league` | string | League |
+| `marketType` | string | Market type |
+| `selection` | string | Selection name |
+| `line` | number | Line value (if applicable) |
+| `bestOdds` | object | Best odds available |
+| `bestBook` | string | Sportsbook with best odds |
+| `allBooks` | array | All books' odds |
+| `sharpOdds` | object | Pinnacle (sharp) odds |
+| `sharpBook` | string | Always "pinnacle" |
+| `timestamp` | string | Last update time |
+
+### Example Request
+
+```bash cURL
+curl -X GET "https://sharpapi.io/api/v1/odds/best?sports=nba&market_type=spread" \
+  -H "X-API-Key: YOUR_API_KEY"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://sharpapi.io/api/v1/odds/best?sports=nba&market_type=spread',
+  { headers: { 'X-API-Key': 'YOUR_API_KEY' } }
+);
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://sharpapi.io/api/v1/odds/best',
+    params={'sports': 'nba', 'market_type': 'spread'},
+    headers={'X-API-Key': 'YOUR_API_KEY'}
+)
+data = response.json()
+```
+
+### Response
+
+```json 200
+{
+  "success": true,
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "count": 15,
+  "filters": {
+    "sports": ["nba"],
+    "marketType": "spread"
+  },
+  "bestOdds": [
+    {
+      "eventId": "evt_nba_lal_bos_20240115",
+      "eventName": "Los Angeles Lakers @ Boston Celtics",
+      "sport": "basketball",
+      "league": "NBA",
+      "marketType": "spread",
+      "selection": "Boston Celtics",
+      "line": -6.5,
+      "bestOdds": {
+        "american": -105,
+        "decimal": 1.952,
+        "probability": 0.512
+      },
+      "bestBook": "fanduel",
+      "allBooks": [
+        { "book": "fanduel", "odds": -105, "line": -6.5 },
+        { "book": "draftkings", "odds": -110, "line": -6.5 },
+        { "book": "betmgm", "odds": -108, "line": -6.5 },
+        { "book": "pinnacle", "odds": -108, "line": -6.5 }
+      ],
+      "sharpOdds": {
+        "american": -108,
+        "decimal": 1.926,
+        "probability": 0.519
+      },
+      "sharpBook": "pinnacle",
+      "timestamp": "2024-01-15T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+```json 403
+{
+  "error": "Pro tier required for best odds endpoint",
+  "code": "tier_required",
+  "required_tier": "pro",
+  "upgrade_url": "https://sharpapi.io/pricing"
+}
+```
+
+## Why Best Odds Matter
+
+Finding the best available odds is crucial for:
+
+1. **Line shopping**: Always bet at the best price
+2. **EV comparison**: Compare to sharp (Pinnacle) line
+3. **Reduced juice**: -105 vs -110 saves 2.3% per bet
+4. **Long-term edge**: Small differences compound
+
+### Example Impact
+
+| Odds | $100 Bet | Breakeven |
+|------|----------|-----------|
+| -115 | +$87 win | 53.5% |
+| -110 | +$91 win | 52.4% |
+| -105 | +$95 win | 51.2% |
+| +100 | +$100 win | 50.0% |
+
+Over 1,000 bets at 52% win rate:
+- At -115: -$44 loss
+- At -110: +$18 profit
+- At -105: +$80 profit

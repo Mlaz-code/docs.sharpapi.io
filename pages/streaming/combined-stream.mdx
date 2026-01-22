@@ -1,0 +1,252 @@
+# Combined Stream
+
+Unified SSE stream for all opportunity types.
+
+```
+GET /api/v1/stream/combined
+```
+
+## Authentication
+
+Requires API key. **Sharp tier required.**
+
+## Query Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `sports` | string | No | all | Comma-separated sports |
+| `min_ev` | number | No | 2.0 | Minimum EV percentage |
+| `min_arb` | number | No | 0.5 | Minimum arbitrage profit |
+
+## Event Types
+
+| Type | Description |
+|------|-------------|
+| `connected` | Connection established |
+| `initial` | Initial snapshot of all opportunities |
+| `ev_update` | New or updated EV opportunity |
+| `arbitrage_update` | New or updated arbitrage |
+| `heartbeat` | Keep-alive (every 30 seconds) |
+| `error` | Error notification |
+
+## Message Format
+
+All messages follow this structure:
+
+```json
+{
+  "type": "ev_update",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "data": { ... }
+}
+```
+
+### Example Connection
+
+```bash cURL
+curl -N -H "X-API-Key: YOUR_API_KEY" \
+  "https://sharpapi.io/api/v1/stream/combined?sports=nba&min_ev=3.0"
+```
+
+```javascript JavaScript
+const eventSource = new EventSource(
+  'https://sharpapi.io/api/v1/stream/combined?sports=nba&min_ev=3.0',
+  {
+    headers: { 'X-API-Key': 'YOUR_API_KEY' }
+  }
+);
+
+eventSource.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+
+  switch (message.type) {
+    case 'connected':
+      console.log('Connected with config:', message.data.config);
+      break;
+    case 'initial':
+      console.log('EV opportunities:', message.data.ev.count);
+      console.log('Arbitrage opportunities:', message.data.arbitrage.count);
+      break;
+    case 'ev_update':
+      handleEVUpdate(message.data);
+      break;
+    case 'arbitrage_update':
+      handleArbUpdate(message.data);
+      break;
+    case 'heartbeat':
+      console.log('Stream alive at', message.timestamp);
+      break;
+  }
+};
+
+eventSource.onerror = (error) => {
+  console.error('Stream error:', error);
+  // Implement reconnection logic
+};
+```
+
+```python Python
+import requests
+import json
+
+def stream_combined(api_key, sports=None, min_ev=2.0):
+    params = {'min_ev': min_ev}
+    if sports:
+        params['sports'] = ','.join(sports)
+
+    response = requests.get(
+        'https://sharpapi.io/api/v1/stream/combined',
+        headers={'X-API-Key': api_key},
+        params=params,
+        stream=True
+    )
+
+    for line in response.iter_lines():
+        if line:
+            line = line.decode('utf-8')
+            if line.startswith('data: '):
+                data = json.loads(line[6:])
+                yield data
+
+# Usage
+for message in stream_combined('YOUR_API_KEY', ['nba', 'nfl'], 3.0):
+    print(f"[{message['type']}]", message.get('data', ''))
+```
+
+### Connected Event
+
+```json
+{
+  "type": "connected",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "data": {
+    "config": {
+      "sports": ["nba"],
+      "minEV": 3.0,
+      "minArb": 0.5
+    },
+    "tier": "sharp",
+    "maxStreams": 10
+  }
+}
+```
+
+### Initial Event
+
+```json
+{
+  "type": "initial",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "data": {
+    "ev": {
+      "count": 12,
+      "opportunities": [
+        {
+          "eventId": "evt_nba_lal_bos_20240115",
+          "eventName": "Los Angeles Lakers @ Boston Celtics",
+          "evPercent": 4.5,
+          "kellyPercent": 2.1,
+          "sportsbook": "draftkings",
+          "selection": "Lakers +6.5"
+        }
+      ]
+    },
+    "arbitrage": {
+      "count": 2,
+      "opportunities": [
+        {
+          "eventId": "evt_nfl_dal_phi_20240115",
+          "eventName": "Dallas Cowboys @ Philadelphia Eagles",
+          "profitPercent": 1.8,
+          "marketType": "moneyline"
+        }
+      ]
+    }
+  }
+}
+```
+
+### EV Update Event
+
+```json
+{
+  "type": "ev_update",
+  "timestamp": "2024-01-15T10:30:15.000Z",
+  "data": {
+    "count": 13,
+    "opportunities": [
+      {
+        "eventId": "evt_nba_gsw_den_20240115",
+        "eventName": "Golden State Warriors @ Denver Nuggets",
+        "evPercent": 5.2,
+        "kellyPercent": 2.8,
+        "sportsbook": "fanduel",
+        "selection": "Warriors ML"
+      }
+    ]
+  }
+}
+```
+
+### Arbitrage Update Event
+
+```json
+{
+  "type": "arbitrage_update",
+  "timestamp": "2024-01-15T10:30:20.000Z",
+  "data": {
+    "count": 3,
+    "opportunities": [
+      {
+        "eventId": "evt_nba_bos_mia_20240115",
+        "eventName": "Boston Celtics @ Miami Heat",
+        "profitPercent": 2.1,
+        "marketType": "spread",
+        "legs": [
+          { "book": "draftkings", "selection": "Celtics -4.5" },
+          { "book": "betmgm", "selection": "Heat +5.5" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Why Use Combined Stream?
+
+1. **Single connection**: All opportunities in one stream
+2. **Lower latency**: No switching between streams
+3. **Simplified code**: One event handler for everything
+4. **Efficient**: Reduces API calls and connections
+
+## Best Practices
+
+1. **Reconnection**: Implement exponential backoff
+2. **Heartbeat monitoring**: Reconnect if no message for 45 seconds
+3. **Deduplication**: Track seen opportunity IDs
+4. **Rate awareness**: Stream counts against concurrent limit
+5. **Clean disconnection**: Close stream when done
+
+```javascript
+// Reconnection with exponential backoff
+let retries = 0;
+const maxRetries = 5;
+
+function connect() {
+  const eventSource = new EventSource(url);
+
+  eventSource.onopen = () => {
+    retries = 0; // Reset on successful connection
+  };
+
+  eventSource.onerror = () => {
+    eventSource.close();
+
+    if (retries < maxRetries) {
+      const delay = Math.min(1000 * Math.pow(2, retries), 30000);
+      retries++;
+      setTimeout(connect, delay);
+    }
+  };
+}
+```

@@ -1,7 +1,38 @@
 {
   "overview": "Overview",
+  "---Discovery": {
+    "type": "separator",
+    "title": "Discovery"
+  },
+  "sports": "Sports",
+  "leagues": "Leagues",
+  "events": "Events",
+  "events-live": "Live Events",
+  "events-by-id": "Event Details",
+  "events-search": "Event Search",
+  "---Odds": {
+    "type": "separator",
+    "title": "Odds"
+  },
   "odds": "Odds",
+  "odds-best": "Best Odds",
+  "---Markets": {
+    "type": "separator",
+    "title": "Markets"
+  },
+  "player-props": "Player Props",
+  "---Opportunities": {
+    "type": "separator",
+    "title": "Opportunities"
+  },
   "ev": "Expected Value",
   "arbitrage": "Arbitrage",
-  "books": "Sportsbooks"
+  "value-bets": "Value Bets",
+  "middles": "Middles",
+  "---Reference": {
+    "type": "separator",
+    "title": "Reference"
+  },
+  "books": "Sportsbooks",
+  "user-stats": "User Stats"
 }

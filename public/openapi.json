@@ -1,0 +1,1365 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SharpAPI",
+    "version": "1.0.0",
+    "description": "Real-time sports betting odds API with +EV detection, arbitrage alerts, and Pinnacle sharp book reference. Build automated betting tools and receive instant opportunity notifications.",
+    "contact": {
+      "name": "SharpAPI Support",
+      "url": "https://sharpapi.io/support",
+      "email": "support@sharpapi.io"
+    },
+    "license": {
+      "name": "Commercial",
+      "url": "https://sharpapi.io/terms"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://sharpapi.io/api/v1",
+      "description": "Production API"
+    }
+  ],
+  "security": [
+    { "ApiKeyHeader": [] },
+    { "ApiKeyQuery": [] },
+    { "BearerAuth": [] }
+  ],
+  "tags": [
+    { "name": "Discovery", "description": "Sports, leagues, and events discovery" },
+    { "name": "Odds", "description": "Odds snapshots and best prices" },
+    { "name": "Markets", "description": "Market types and specific market data" },
+    { "name": "Opportunities", "description": "EV, arbitrage, and value bet detection" },
+    { "name": "Streaming", "description": "Real-time SSE data streams" },
+    { "name": "User", "description": "User account and usage statistics" },
+    { "name": "Reference", "description": "Reference data and configuration" }
+  ],
+  "paths": {
+    "/sports": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "List sports",
+        "description": "Returns list of available sports with event counts and associated leagues.",
+        "operationId": "listSports",
+        "parameters": [
+          {
+            "name": "include_empty",
+            "in": "query",
+            "description": "Include sports with 0 events",
+            "schema": { "type": "boolean", "default": false }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of sports",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SportsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/leagues": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "List leagues",
+        "description": "Returns list of leagues with event counts, optionally filtered by sport.",
+        "operationId": "listLeagues",
+        "parameters": [
+          {
+            "name": "sport",
+            "in": "query",
+            "description": "Filter by sport (e.g., basketball, football)",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of leagues",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LeaguesResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "List events",
+        "description": "Returns list of events with filtering and pagination.",
+        "operationId": "listEvents",
+        "parameters": [
+          {
+            "name": "sport",
+            "in": "query",
+            "description": "Filter by sport",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "league",
+            "in": "query",
+            "description": "Filter by league",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "live",
+            "in": "query",
+            "description": "Filter by live status",
+            "schema": { "type": "boolean" }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "description": "Filter by date (YYYY-MM-DD)",
+            "schema": { "type": "string", "format": "date" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results (max 500)",
+            "schema": { "type": "integer", "default": 100, "maximum": 500 }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "description": "Pagination offset",
+            "schema": { "type": "integer", "default": 0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of events",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/events/live": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "List live events",
+        "description": "Returns only in-play live events.",
+        "operationId": "listLiveEvents",
+        "parameters": [
+          {
+            "name": "sport",
+            "in": "query",
+            "description": "Filter by sport",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "league",
+            "in": "query",
+            "description": "Filter by league",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of live events",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/LiveEventsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/events/{eventId}": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Get event details",
+        "description": "Returns detailed information about a specific event including all available odds.",
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "name": "eventId",
+            "in": "path",
+            "required": true,
+            "description": "Event ID",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event details",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventDetailResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/events/search": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Search events",
+        "description": "Search for events by team name.",
+        "operationId": "searchEvents",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Search query (min 2 characters)",
+            "schema": { "type": "string", "minLength": 2 }
+          },
+          {
+            "name": "sport",
+            "in": "query",
+            "description": "Filter by sport",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results",
+            "schema": { "type": "integer", "default": 20, "maximum": 100 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Search results",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EventSearchResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/odds": {
+      "get": {
+        "tags": ["Odds"],
+        "summary": "Get odds snapshot",
+        "description": "Returns current odds from all sportsbooks.",
+        "operationId": "getOdds",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" },
+            "example": "nba,nfl"
+          },
+          {
+            "name": "books",
+            "in": "query",
+            "description": "Comma-separated sportsbooks filter",
+            "schema": { "type": "string" },
+            "example": "draftkings,pinnacle"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Odds snapshot",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OddsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/odds/best": {
+      "get": {
+        "tags": ["Odds"],
+        "summary": "Get best odds",
+        "description": "Returns best available odds for each selection across all sportsbooks. Requires Pro tier.",
+        "operationId": "getBestOdds",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "event_ids",
+            "in": "query",
+            "description": "Comma-separated event IDs (batch lookup, max 10 for Pro, 50 for Sharp)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "market_type",
+            "in": "query",
+            "description": "Filter by market type",
+            "schema": { "$ref": "#/components/schemas/MarketType" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Best odds",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BestOddsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/ev": {
+      "get": {
+        "tags": ["Opportunities"],
+        "summary": "Get EV opportunities",
+        "description": "Returns +EV betting opportunities calculated against Pinnacle sharp line. Requires Pro tier.",
+        "operationId": "getEV",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "books",
+            "in": "query",
+            "description": "Comma-separated target sportsbooks",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "min_ev",
+            "in": "query",
+            "description": "Minimum EV percentage",
+            "schema": { "type": "number", "default": 2.0 }
+          },
+          {
+            "name": "min_kelly",
+            "in": "query",
+            "description": "Minimum Kelly percentage",
+            "schema": { "type": "number", "default": 0.5 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "EV opportunities",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/EVResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/arbitrage": {
+      "get": {
+        "tags": ["Opportunities"],
+        "summary": "Get arbitrage opportunities",
+        "description": "Returns cross-book arbitrage opportunities with stake calculations. Requires Pro tier.",
+        "operationId": "getArbitrage",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "min_profit",
+            "in": "query",
+            "description": "Minimum profit percentage",
+            "schema": { "type": "number", "default": 0.5 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Arbitrage opportunities",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ArbitrageResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/value-bets": {
+      "get": {
+        "tags": ["Opportunities"],
+        "summary": "Get value bets",
+        "description": "Returns enhanced EV opportunities with confidence ratings and combined value scores. Requires Pro tier.",
+        "operationId": "getValueBets",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "books",
+            "in": "query",
+            "description": "Comma-separated target sportsbooks",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "min_ev",
+            "in": "query",
+            "description": "Minimum EV percentage",
+            "schema": { "type": "number", "default": 2.0 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results",
+            "schema": { "type": "integer", "default": 50, "maximum": 200 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Value bets",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValueBetsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/middles": {
+      "get": {
+        "tags": ["Opportunities"],
+        "summary": "Get middle opportunities",
+        "description": "Detects middle opportunities where both sides of a spread/total could win. Requires Sharp tier.",
+        "operationId": "getMiddles",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "market_type",
+            "in": "query",
+            "description": "Filter by spread or total",
+            "schema": { "type": "string", "enum": ["spread", "total"] }
+          },
+          {
+            "name": "min_gap",
+            "in": "query",
+            "description": "Minimum gap size between lines",
+            "schema": { "type": "number", "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results",
+            "schema": { "type": "integer", "default": 50, "maximum": 200 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Middle opportunities",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MiddlesResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/markets/types": {
+      "get": {
+        "tags": ["Markets"],
+        "summary": "List market types",
+        "description": "Returns list of available market types with descriptions.",
+        "operationId": "listMarketTypes",
+        "responses": {
+          "200": {
+            "description": "Market types",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MarketTypesResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/markets/player-props": {
+      "get": {
+        "tags": ["Markets"],
+        "summary": "Get player props",
+        "description": "Returns player proposition markets. Requires Pro tier.",
+        "operationId": "getPlayerProps",
+        "parameters": [
+          {
+            "name": "sport",
+            "in": "query",
+            "description": "Filter by sport",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "event_id",
+            "in": "query",
+            "description": "Filter by event ID",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "player",
+            "in": "query",
+            "description": "Filter by player name (partial match)",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results",
+            "schema": { "type": "integer", "default": 100, "maximum": 500 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Player props",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PlayerPropsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/markets/alternates": {
+      "get": {
+        "tags": ["Markets"],
+        "summary": "Get alternate lines",
+        "description": "Returns alternate spread and total lines. Requires Pro tier.",
+        "operationId": "getAlternates",
+        "parameters": [
+          {
+            "name": "sport",
+            "in": "query",
+            "description": "Filter by sport",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "event_id",
+            "in": "query",
+            "description": "Filter by event ID",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "Filter by spread or total",
+            "schema": { "type": "string", "enum": ["spread", "total"] }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum results",
+            "schema": { "type": "integer", "default": 100, "maximum": 500 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alternate lines",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AlternatesResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/markets/active": {
+      "get": {
+        "tags": ["Markets"],
+        "summary": "Get active markets",
+        "description": "Returns summary of all active markets with counts. Requires Pro tier.",
+        "operationId": "getActiveMarkets",
+        "parameters": [
+          {
+            "name": "sport",
+            "in": "query",
+            "description": "Filter by sport",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active markets summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ActiveMarketsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/books": {
+      "get": {
+        "tags": ["Reference"],
+        "summary": "List sportsbooks",
+        "description": "Returns list of available sportsbooks with status and capabilities.",
+        "operationId": "listBooks",
+        "responses": {
+          "200": {
+            "description": "Sportsbooks list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BooksResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/user/stats": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get usage statistics",
+        "description": "Returns API usage statistics and tier limits for the authenticated user.",
+        "operationId": "getUserStats",
+        "responses": {
+          "200": {
+            "description": "User statistics",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserStatsResponse" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/stream/odds": {
+      "get": {
+        "tags": ["Streaming"],
+        "summary": "Stream odds updates",
+        "description": "Server-Sent Events stream of real-time odds updates.",
+        "operationId": "streamOdds",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "$ref": "#/components/schemas/OddsStreamEvent" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/stream/ev": {
+      "get": {
+        "tags": ["Streaming"],
+        "summary": "Stream EV opportunities",
+        "description": "Server-Sent Events stream of +EV opportunities. Requires Pro tier.",
+        "operationId": "streamEV",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "min_ev",
+            "in": "query",
+            "description": "Minimum EV percentage",
+            "schema": { "type": "number", "default": 2.0 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "$ref": "#/components/schemas/EVStreamEvent" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/stream/arbitrage": {
+      "get": {
+        "tags": ["Streaming"],
+        "summary": "Stream arbitrage opportunities",
+        "description": "Server-Sent Events stream of arbitrage opportunities. Requires Pro tier.",
+        "operationId": "streamArbitrage",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "min_profit",
+            "in": "query",
+            "description": "Minimum profit percentage",
+            "schema": { "type": "number", "default": 0.5 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "$ref": "#/components/schemas/ArbitrageStreamEvent" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    },
+    "/stream/combined": {
+      "get": {
+        "tags": ["Streaming"],
+        "summary": "Stream all opportunities",
+        "description": "Unified SSE stream with EV, arbitrage, and odds updates. Requires Sharp tier.",
+        "operationId": "streamCombined",
+        "parameters": [
+          {
+            "name": "sports",
+            "in": "query",
+            "description": "Comma-separated sports filter",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "min_ev",
+            "in": "query",
+            "description": "Minimum EV percentage",
+            "schema": { "type": "number", "default": 2.0 }
+          },
+          {
+            "name": "min_arb",
+            "in": "query",
+            "description": "Minimum arbitrage profit",
+            "schema": { "type": "number", "default": 0.5 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SSE stream",
+            "content": {
+              "text/event-stream": {
+                "schema": { "$ref": "#/components/schemas/CombinedStreamEvent" }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "403": { "$ref": "#/components/responses/TierRequired" },
+          "429": { "$ref": "#/components/responses/RateLimited" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key in X-API-Key header"
+      },
+      "ApiKeyQuery": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "api_key",
+        "description": "API key in query parameter (for SSE streams)"
+      },
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "API key as Bearer token"
+      }
+    },
+    "schemas": {
+      "OddsValue": {
+        "type": "object",
+        "required": ["american", "decimal", "probability"],
+        "properties": {
+          "american": { "type": "number", "description": "American odds (-110, +150)", "example": -110 },
+          "decimal": { "type": "number", "description": "Decimal odds (1.909)", "example": 1.909 },
+          "probability": { "type": "number", "description": "Implied probability (0.524)", "example": 0.524 }
+        }
+      },
+      "MarketType": {
+        "type": "string",
+        "enum": ["moneyline", "spread", "total", "team_total", "player_prop", "game_prop", "futures", "other"]
+      },
+      "EventStatus": {
+        "type": "string",
+        "enum": ["upcoming", "live", "ended", "postponed", "cancelled"]
+      },
+      "SubscriptionTier": {
+        "type": "string",
+        "enum": ["free", "pro", "sharp"]
+      },
+      "NormalizedOdds": {
+        "type": "object",
+        "required": ["id", "sportsbook", "eventId", "sport", "league", "homeTeam", "awayTeam", "marketType", "selection", "odds", "eventStartTime", "timestamp", "isLive", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "sportsbook": { "type": "string", "example": "draftkings" },
+          "sportsbookDisplayName": { "type": "string", "example": "DraftKings" },
+          "eventId": { "type": "string" },
+          "externalEventId": { "type": "string" },
+          "sport": { "type": "string", "example": "basketball" },
+          "league": { "type": "string", "example": "NBA" },
+          "homeTeam": { "type": "string", "example": "Los Angeles Lakers" },
+          "awayTeam": { "type": "string", "example": "Boston Celtics" },
+          "marketType": { "$ref": "#/components/schemas/MarketType" },
+          "selection": { "type": "string", "example": "Los Angeles Lakers" },
+          "selectionType": { "type": "string", "enum": ["home", "away", "over", "under", "draw", "yes", "no", "other"] },
+          "odds": { "$ref": "#/components/schemas/OddsValue" },
+          "line": { "type": "number", "nullable": true, "example": -3.5 },
+          "eventStartTime": { "type": "string", "format": "date-time" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "isLive": { "type": "boolean" },
+          "status": { "$ref": "#/components/schemas/EventStatus" }
+        }
+      },
+      "Event": {
+        "type": "object",
+        "required": ["id", "sport", "league", "homeTeam", "awayTeam", "startTime", "status", "isLive", "markets", "bookCount"],
+        "properties": {
+          "id": { "type": "string" },
+          "externalIds": { "type": "object", "additionalProperties": { "type": "string" } },
+          "sport": { "type": "string" },
+          "league": { "type": "string" },
+          "homeTeam": { "type": "string" },
+          "awayTeam": { "type": "string" },
+          "startTime": { "type": "string", "format": "date-time" },
+          "status": { "$ref": "#/components/schemas/EventStatus" },
+          "isLive": { "type": "boolean" },
+          "liveScore": {
+            "type": "object",
+            "properties": {
+              "home": { "type": "integer" },
+              "away": { "type": "integer" },
+              "period": { "type": "string" },
+              "clock": { "type": "string" }
+            }
+          },
+          "markets": { "type": "array", "items": { "type": "string" } },
+          "bookCount": { "type": "integer" }
+        }
+      },
+      "SportSummary": {
+        "type": "object",
+        "required": ["id", "name", "eventCount", "liveCount", "leagues"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "eventCount": { "type": "integer" },
+          "liveCount": { "type": "integer" },
+          "leagues": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "LeagueSummary": {
+        "type": "object",
+        "required": ["id", "name", "sport", "eventCount", "liveCount"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "sport": { "type": "string" },
+          "eventCount": { "type": "integer" },
+          "liveCount": { "type": "integer" }
+        }
+      },
+      "EVOpportunity": {
+        "type": "object",
+        "required": ["eventId", "eventName", "sport", "marketType", "sportsbook", "selection", "odds", "decimalOdds", "sharpOdds", "sharpDecimalOdds", "sharpBook", "fairProbability", "evPercent", "kellyPercent", "detectedAt"],
+        "properties": {
+          "eventId": { "type": "string" },
+          "eventName": { "type": "string" },
+          "sport": { "type": "string" },
+          "marketType": { "type": "string" },
+          "sportsbook": { "type": "string" },
+          "selection": { "type": "string" },
+          "odds": { "type": "number", "description": "American odds" },
+          "decimalOdds": { "type": "number" },
+          "sharpOdds": { "type": "number", "description": "Pinnacle American odds" },
+          "sharpDecimalOdds": { "type": "number" },
+          "sharpBook": { "type": "string" },
+          "fairProbability": { "type": "number", "description": "True probability as percentage" },
+          "evPercent": { "type": "number", "description": "Expected value percentage" },
+          "kellyPercent": { "type": "number", "description": "Kelly Criterion stake percentage" },
+          "detectedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ArbitrageLeg": {
+        "type": "object",
+        "required": ["sportsbook", "selection", "odds", "decimalOdds", "stakePercent"],
+        "properties": {
+          "sportsbook": { "type": "string" },
+          "selection": { "type": "string" },
+          "odds": { "type": "number" },
+          "decimalOdds": { "type": "number" },
+          "stakePercent": { "type": "number" }
+        }
+      },
+      "ArbitrageOpportunity": {
+        "type": "object",
+        "required": ["eventId", "eventName", "sport", "marketType", "profitPercent", "impliedTotal", "legs", "detectedAt"],
+        "properties": {
+          "eventId": { "type": "string" },
+          "eventName": { "type": "string" },
+          "sport": { "type": "string" },
+          "marketType": { "type": "string" },
+          "profitPercent": { "type": "number" },
+          "impliedTotal": { "type": "number" },
+          "legs": { "type": "array", "items": { "$ref": "#/components/schemas/ArbitrageLeg" } },
+          "detectedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "ValueBet": {
+        "allOf": [
+          { "$ref": "#/components/schemas/EVOpportunity" },
+          {
+            "type": "object",
+            "required": ["edgePercent", "combinedScore", "confidence", "marketLiquidity", "timeUntilStart"],
+            "properties": {
+              "edgePercent": { "type": "number" },
+              "combinedScore": { "type": "number" },
+              "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+              "marketLiquidity": { "type": "string", "enum": ["low", "medium", "high"] },
+              "timeUntilStart": { "type": "integer", "description": "Seconds until event starts" }
+            }
+          }
+        ]
+      },
+      "MiddleOpportunity": {
+        "type": "object",
+        "required": ["eventId", "eventName", "sport", "league", "marketType", "side1", "side2", "middleSize", "middleNumbers", "worstCaseLoss", "bestCaseProfit", "breakEvenPercent", "detectedAt"],
+        "properties": {
+          "eventId": { "type": "string" },
+          "eventName": { "type": "string" },
+          "sport": { "type": "string" },
+          "league": { "type": "string" },
+          "marketType": { "type": "string", "enum": ["spread", "total"] },
+          "side1": {
+            "type": "object",
+            "properties": {
+              "book": { "type": "string" },
+              "selection": { "type": "string" },
+              "line": { "type": "number" },
+              "odds": { "$ref": "#/components/schemas/OddsValue" },
+              "stakePercent": { "type": "number" }
+            }
+          },
+          "side2": {
+            "type": "object",
+            "properties": {
+              "book": { "type": "string" },
+              "selection": { "type": "string" },
+              "line": { "type": "number" },
+              "odds": { "$ref": "#/components/schemas/OddsValue" },
+              "stakePercent": { "type": "number" }
+            }
+          },
+          "middleSize": { "type": "number" },
+          "middleNumbers": { "type": "array", "items": { "type": "integer" } },
+          "worstCaseLoss": { "type": "number" },
+          "bestCaseProfit": { "type": "number" },
+          "breakEvenPercent": { "type": "number" },
+          "detectedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Sportsbook": {
+        "type": "object",
+        "required": ["id", "name", "displayName", "isSharp", "hasLiveOdds", "hasPlayerProps", "region", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "displayName": { "type": "string" },
+          "isSharp": { "type": "boolean" },
+          "hasLiveOdds": { "type": "boolean" },
+          "hasPlayerProps": { "type": "boolean" },
+          "region": { "type": "array", "items": { "type": "string" } },
+          "status": { "type": "string", "enum": ["active", "inactive"] },
+          "oddsCount": { "type": "integer" },
+          "lastUpdate": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "SportsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "totalEvents": { "type": "integer" },
+          "totalLive": { "type": "integer" },
+          "sports": { "type": "array", "items": { "$ref": "#/components/schemas/SportSummary" } }
+        }
+      },
+      "LeaguesResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "totalEvents": { "type": "integer" },
+          "leagues": { "type": "array", "items": { "$ref": "#/components/schemas/LeagueSummary" } }
+        }
+      },
+      "EventsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "total": { "type": "integer" },
+          "count": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" },
+          "hasMore": { "type": "boolean" },
+          "events": { "type": "array", "items": { "$ref": "#/components/schemas/Event" } }
+        }
+      },
+      "LiveEventsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "bySport": { "type": "object", "additionalProperties": { "type": "integer" } },
+          "events": { "type": "array", "items": { "$ref": "#/components/schemas/Event" } }
+        }
+      },
+      "EventDetailResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "event": { "$ref": "#/components/schemas/Event" },
+          "oddsCount": { "type": "integer" },
+          "oddsByMarket": { "type": "object" },
+          "rawOdds": { "type": "array", "items": { "$ref": "#/components/schemas/NormalizedOdds" } }
+        }
+      },
+      "EventSearchResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "query": { "type": "string" },
+          "total": { "type": "integer" },
+          "count": { "type": "integer" },
+          "events": { "type": "array", "items": { "$ref": "#/components/schemas/Event" } }
+        }
+      },
+      "OddsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "books": { "type": "array", "items": { "type": "string" } },
+          "data": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/components/schemas/NormalizedOdds" } } }
+        }
+      },
+      "BestOddsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "bestOdds": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "EVResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "summary": { "type": "object" },
+          "opportunities": { "type": "array", "items": { "$ref": "#/components/schemas/EVOpportunity" } }
+        }
+      },
+      "ArbitrageResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "summary": { "type": "object" },
+          "opportunities": { "type": "array", "items": { "$ref": "#/components/schemas/ArbitrageOpportunity" } }
+        }
+      },
+      "ValueBetsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "summary": { "type": "object" },
+          "count": { "type": "integer" },
+          "valueBets": { "type": "array", "items": { "$ref": "#/components/schemas/ValueBet" } }
+        }
+      },
+      "MiddlesResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "summary": { "type": "object" },
+          "count": { "type": "integer" },
+          "middles": { "type": "array", "items": { "$ref": "#/components/schemas/MiddleOpportunity" } }
+        }
+      },
+      "MarketTypesResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "marketTypes": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "PlayerPropsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "total": { "type": "integer" },
+          "count": { "type": "integer" },
+          "playerProps": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "AlternatesResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "total": { "type": "integer" },
+          "count": { "type": "integer" },
+          "alternates": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "ActiveMarketsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "summary": { "type": "object" },
+          "markets": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "BooksResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "count": { "type": "integer" },
+          "active": { "type": "integer" },
+          "books": { "type": "array", "items": { "$ref": "#/components/schemas/Sportsbook" } }
+        }
+      },
+      "UserStatsResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "stats": {
+            "type": "object",
+            "properties": {
+              "keyId": { "type": "string" },
+              "tier": { "$ref": "#/components/schemas/SubscriptionTier" },
+              "usage": { "type": "object" },
+              "limits": { "type": "object" }
+            }
+          },
+          "features": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "OddsStreamEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["initial", "odds_update", "heartbeat", "error"] },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "data": { "type": "object" }
+        }
+      },
+      "EVStreamEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["initial", "ev_opportunity", "heartbeat", "error"] },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "data": { "type": "object" }
+        }
+      },
+      "ArbitrageStreamEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["initial", "arbitrage", "heartbeat", "error"] },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "data": { "type": "object" }
+        }
+      },
+      "CombinedStreamEvent": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "enum": ["connected", "initial", "ev_update", "arbitrage_update", "heartbeat", "error"] },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "data": { "type": "object" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error", "code"],
+        "properties": {
+          "error": { "type": "string" },
+          "code": { "type": "string" },
+          "docs": { "type": "string" }
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Authentication required",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "API key required", "code": "missing_api_key", "docs": "https://sharpapi.io/docs/authentication" }
+          }
+        }
+      },
+      "TierRequired": {
+        "description": "Higher tier required",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/ErrorResponse" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "required_tier": { "type": "string" },
+                    "upgrade_url": { "type": "string" }
+                  }
+                }
+              ]
+            },
+            "example": { "error": "Pro tier required", "code": "tier_required", "required_tier": "pro", "upgrade_url": "https://sharpapi.io/pricing" }
+          }
+        }
+      },
+      "RateLimited": {
+        "description": "Rate limit exceeded",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                { "$ref": "#/components/schemas/ErrorResponse" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "retry_after": { "type": "integer" },
+                    "upgrade_url": { "type": "string" }
+                  }
+                }
+              ]
+            },
+            "example": { "error": "Rate limit exceeded", "code": "rate_limit_exceeded", "retry_after": 45, "upgrade_url": "https://sharpapi.io/pricing" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Resource not found",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Event not found", "code": "not_found" }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Invalid request",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" },
+            "example": { "error": "Invalid query parameter", "code": "invalid_request" }
+          }
+        }
+      }
+    }
+  }
+}
