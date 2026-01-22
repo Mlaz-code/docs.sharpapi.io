@@ -6,7 +6,7 @@ Complete Documentation for LLM Integration
 OVERVIEW
 --------------------------------------------------------------------------------
 SharpAPI is a real-time sports betting odds API providing:
-- Live odds from major US sportsbooks (DraftKings, FanDuel, BetMGM, Caesars)
+- Live odds from 15+ sportsbooks (DraftKings, FanDuel, BetMGM, Caesars, ESPN Bet, Fanatics, BetRivers, PointsBet, Bet365, Unibet, Hard Rock, SuperBook, WynnBET, Betfred)
 - Sharp book reference odds from Pinnacle for true probability
 - +EV (Expected Value) opportunity detection
 - Cross-book arbitrage detection with stake calculations
@@ -1245,15 +1245,24 @@ Example Response:
   ]
 }
 
-Sportsbook Reference:
-| ID          | Name        | Sharp | Primary Region | Notes            |
-|-------------|-------------|-------|----------------|------------------|
-| draftkings  | DraftKings  | No    | US             | Most markets     |
-| fanduel     | FanDuel     | No    | US             | Good promos      |
-| betmgm      | BetMGM      | No    | US             | -                |
-| caesars     | Caesars     | No    | US             | -                |
-| bet365      | Bet365      | No    | UK/EU          | -                |
-| pinnacle    | Pinnacle    | YES   | Global         | Sharp reference  |
+Sportsbook Reference (15+ books):
+| ID          | Name           | Sharp | Region    | Notes              |
+|-------------|----------------|-------|-----------|--------------------|
+| draftkings  | DraftKings     | No    | US        | Most markets       |
+| fanduel     | FanDuel        | No    | US        | Good promos        |
+| betmgm      | BetMGM         | No    | US        | -                  |
+| caesars     | Caesars        | No    | US        | -                  |
+| espnbet     | ESPN Bet       | No    | US        | Formerly Barstool  |
+| fanatics    | Fanatics       | No    | US        | New entrant        |
+| betrivers   | BetRivers      | No    | US        | -                  |
+| pointsbet   | PointsBet      | No    | US        | -                  |
+| pinnacle    | Pinnacle       | YES   | Global    | Sharp reference    |
+| bet365      | Bet365         | No    | UK/EU/AU  | International      |
+| unibet      | Unibet         | No    | EU/US     | -                  |
+| hardrock    | Hard Rock Bet  | No    | US        | Regional           |
+| superbook   | SuperBook      | No    | US        | -                  |
+| wynnbet     | WynnBET        | No    | US        | -                  |
+| betfred     | Betfred        | No    | UK/US     | -                  |
 
 ================================================================================
 REFERENCE DATA
