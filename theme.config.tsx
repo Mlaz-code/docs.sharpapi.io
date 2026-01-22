@@ -8,9 +8,6 @@ const config: DocsThemeConfig = {
       <span style={{ fontWeight: 700 }}>SharpAPI</span>
     </Link>
   ),
-  project: {
-    link: 'https://github.com/Mlaz-code/sharp-api',
-  },
   navbar: {
     extraContent: (
       <>
@@ -59,7 +56,7 @@ const config: DocsThemeConfig = {
     toggleButton: true,
   },
   toc: {
-    backToTop: false,
+    component: null,
   },
   feedback: {
     content: null,
